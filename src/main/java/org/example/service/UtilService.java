@@ -122,7 +122,7 @@ public class UtilService {
 
         for (Path file : files) {
             if (!Files.exists(file)) {
-                throw new FileProcessingException("Файл не существует: " + file);
+                throw new FileProcessingException("Файл не найден: " + file);
             }
 
             if (!Files.isReadable(file)) {
