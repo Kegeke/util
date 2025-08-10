@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,15 +65,9 @@ public class UtilService {
             }
 
             switch (params[i]) {
-                case "-s" -> {
-                    fileOutput.setShortStatistic(true);
-                }
-                case "-f" -> {
-                    fileOutput.setFullStatistic(true);
-                }
-                case "-a" -> {
-                    fileOutput.setAppend(true);
-                }
+                case "-s" -> fileOutput.setShortStatistic(true);
+                case "-f" -> fileOutput.setFullStatistic(true);
+                case "-a" -> fileOutput.setAppend(true);
                 case "-o" -> {
                     if (i + 1 >= len) {
                         System.out.println("Отсутствует путь директории при опции '-о'");
@@ -151,21 +144,21 @@ public class UtilService {
     }
 
     private void sortStrings(List<String> lines, Map<String, List<String>> dataTypes) {
-        String type = "";
+        String type;
 
         for (String str : lines) {
             if (str.matches(ONLY_STRING_REGEX)) {
                 type = "strings";
-                dataTypes.computeIfAbsent(type, k -> new ArrayList<>()).add(str);
+                dataTypes.computeIfAbsent(type, _ -> new ArrayList<>()).add(str);
             } else if (str.matches(ONLY_INTEGER_REGEX)) {
                 type = "integers";
-                dataTypes.computeIfAbsent(type, k -> new ArrayList<>()).add(str);
+                dataTypes.computeIfAbsent(type, _ -> new ArrayList<>()).add(str);
             } else if (str.matches(ONLY_FLOATS_REGEX)) {
                 type = "floats";
-                dataTypes.computeIfAbsent(type, k -> new ArrayList<>()).add(str);
+                dataTypes.computeIfAbsent(type, _ -> new ArrayList<>()).add(str);
             } else {
                 type = "others";
-                dataTypes.computeIfAbsent(type, k -> new ArrayList<>()).add(str);
+                dataTypes.computeIfAbsent(type, _ -> new ArrayList<>()).add(str);
             }
         }
     }
