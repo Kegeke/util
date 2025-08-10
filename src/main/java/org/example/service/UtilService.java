@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,12 +26,13 @@ public class UtilService {
 
     public void start(String[] params) {
         checkParam(params);
-
         try {
             validateFile();
         } catch (FileProcessingException e) {
             System.err.println("Ошибка: " + e.getMessage());
             System.exit(2);
+        } catch (IOException e) {
+            System.out.println("Ошибка при чтении файла: " + e);
         }
 
         Map<String, List<String>> dataTypes = fileReader();
@@ -53,52 +55,82 @@ public class UtilService {
         int len = params.length;
 
         for (int i = 0; i < len; i++) {
-            if (params[i].equals("-a")) {
-                fileOutput.setAppend(true);
-            }
-
-            if (params[i].equals("-o")) {
-                fileOutput.setDirectory(params[i + 1]);
-                i++;
-            }
-
-            if (params[i].equals("-p")) {
-                fileOutput.setPrefix(params[i + 1]);
-                i++;
-            }
-
-            if (params[i].equals("-s")) {
-                fileOutput.setShortStatistic(true);
-            }
-
-            if (params[i].equals("-f")) {
-                fileOutput.setFullStatistic(true);
-            }
-
             if (params[i].endsWith(".txt")) {
                 fileOutput.addFile(Path.of(params[i]));
+                continue;
             }
 
             if (params[i].matches(INVALID_OPTION_REGEX)) {
-                System.out.printf("Не допустимая опция '%s'%n", params[i]);
+                System.out.printf("Недопустимая опция '%s'%n", params[i]);
+                continue;
+            }
+
+            switch (params[i]) {
+                case "-s" -> {
+                    fileOutput.setShortStatistic(true);
+                }
+                case "-f" -> {
+                    fileOutput.setFullStatistic(true);
+                }
+                case "-a" -> {
+                    fileOutput.setAppend(true);
+                }
+                case "-o" -> {
+                    if (i + 1 >= len) {
+                        System.out.println("Отсутствует путь директории при опции '-о'");
+                        continue;
+                    }
+
+                    String str = params[i + 1];
+
+                    if (str.matches(".+\\.+$") || str.matches("^(?i)(-[aopsf]$)") || str.isEmpty()) {
+                        System.out.println("Неверный формат '-o'");
+                        i++;
+                        continue;
+                    }
+
+                    fileOutput.setDirectory(str);
+                    i++;
+                }
+                case "-p" -> {
+                    if (i + 1 >= len) {
+                        System.out.println("Отсутствует префикс '-p'");
+                        continue;
+                    }
+
+                    String str = params[i + 1];
+
+                    if (str.isEmpty() || str.matches(".+\\.+$") || str.matches("^(?i)(-[aopsf]$)")) {
+                        System.out.println("Неверный формат '-p'");
+                        i++;
+                        continue;
+                    }
+
+                    fileOutput.setPrefix(str);
+                    i++;
+                }
             }
         }
-
     }
 
-    private void validateFile() throws FileProcessingException {
+    private void validateFile() throws FileProcessingException, IOException {
         List<Path> files = fileOutput.getFiles();
 
         if (files.isEmpty()) {
-            throw new FileProcessingException("Неправильное или отсутствует имя файла");
+            throw new FileProcessingException("Отсутствуют входящие файлы");
         }
 
         for (Path file : files) {
             if (!Files.exists(file)) {
                 throw new FileProcessingException("Файл не существует: " + file);
             }
+
             if (!Files.isReadable(file)) {
                 throw new FileProcessingException("Нет прав на чтение файла: " + file);
+            }
+
+            if (Files.readString(file).isEmpty()) {
+                System.out.println("Данный файл пуст: " + file.getFileName());
             }
         }
     }
@@ -140,6 +172,11 @@ public class UtilService {
 
     private void saveFiles(Map<String, List<String>> dataTypes, String prefix,
                            Path directory, boolean isAppend) throws IOException {
+        if (!Files.isDirectory(directory)) {
+            System.out.println("Не распознан путь сохранения файла");
+            fileOutput.setDirectory("");
+        }
+
         if (!Files.exists(directory)) {
             Files.createDirectories(directory);
         }
@@ -170,5 +207,4 @@ public class UtilService {
 
         }
     }
-
 }

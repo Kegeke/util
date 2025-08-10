@@ -26,6 +26,7 @@ import org.example.service.UtilService;
         - должны быть обработаны ошибки
         - программа не должна падать
  */
+
 public class Main {
     public static void main(String[] args) {
         UtilService service = new UtilService();
